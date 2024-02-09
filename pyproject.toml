@@ -6,3 +6,42 @@ output-format = "grouped"
 
 [tool.ruff.format]
 exclude = [".git", ".venv", ".mypy_cache", ".tox", "__pycache__"]
+
+[tool.poetry]
+name = "openshift-ci-job-trigger"
+version = "0.0.0"
+description = "A tool to trigger openshift-ci jobs"
+readme = "README.md"
+repository = "https://github.com/RedHatQE/openshift-ci-job-trigger"
+authors = ["Meni Yakove <myakove@gmail.com>", "Ruth Netser <rnetser@gmail.com>"]
+license = "Apache-2.0"
+packages = [{ include = "openshift_ci_job_trigger" }]
+homepage = "https://github.com/RedHatQE/openshift-ci-job-trigger"
+documentation = "https://github.com/RedHatQE/openshift-ci-job-trigger/blob/main/README.md"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+
+[tool.poetry.scripts]
+openshift-cli-installer = "openshift_ci_job_trigger.cli:main"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^8.1.7"
+python-simple-logger = "^1.0.10"
+
+[tool.poetry.group.dev.dependencies]
+ipdb = "^0.13.13"
+ipython = "*"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+pattern = "((?P<epoch>\\d+)!)?(?P<base>\\d+(\\.\\d+)*)"
+
+[tool.poetry-dynamic-versioning.substitution]
+files = ["VERSION"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
