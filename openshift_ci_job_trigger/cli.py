@@ -4,6 +4,10 @@ import click
 from simple_logger.logger import get_logger
 
 
+def wait_for_job_completed(openshift_ci_token, openshift_ci_job_name, triggering_job_id):
+    pass
+
+
 @click.option(
     "--openshift-ci-token",
     help="Openshift ci token, needed to trigger jobs.",
@@ -32,7 +36,15 @@ from simple_logger.logger import get_logger
     show_default=True,
 )
 def main(**kwargs):
-    kwargs.pop("pdb", None)
+    openshift_ci_token = kwargs["openshift_ci_token"]
+    openshift_ci_job_name = kwargs["openshift_ci_job_name"]
+    triggering_job_id = kwargs["triggering_job_id"]
+    if triggering_job_id:
+        wait_for_job_completed(
+            openshift_ci_token=openshift_ci_token,
+            openshift_ci_job_name=openshift_ci_job_name,
+            triggering_job_id=triggering_job_id,
+        )
 
 
 if __name__ == "__main__":
