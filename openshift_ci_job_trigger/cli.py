@@ -26,7 +26,7 @@ def get_prow_job_status(openshift_ci_token, triggering_job_id):
     if response.ok:
         return response_text["job_status"]
 
-    LOGGER.error(f"Failed to get job status: {response_text}")
+    LOGGER.error(f"Job failed on: {response_text}. Response headers: {response.headers}")
     raise click.Abort()
 
 
@@ -97,8 +97,6 @@ def triger_openshift_ci_job(
 def main(**kwargs):
     user_kwargs = kwargs
     if job_yaml_config_file := user_kwargs.get("job_yaml_config_file"):
-        # Update CLI user input from YAML file if exists
-        # Since CLI user input has some defaults, YAML file will override them
         user_kwargs.update(parse_config(path=job_yaml_config_file, default_value=""))
 
     openshift_ci_token = kwargs.get("openshift_ci_token")
@@ -111,6 +109,8 @@ def main(**kwargs):
         )
 
     # TODO: Check only one trigger per job.
+    # TODO: Check re-trigger when the job is running - do we need to wait for the 1st one to end or the retriggered job will be queued?
+    # TODO: If need to wait - where do we run? A job in PSI? can we do that from openshift ci?
     triger_openshift_ci_job(
         openshift_ci_token=openshift_ci_token,
         openshift_ci_job_name=openshift_ci_job_name,
