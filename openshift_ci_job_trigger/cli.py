@@ -67,21 +67,25 @@ def triger_openshift_ci_job(
     help="Openshift ci token, needed to trigger jobs.",
     default=os.environ.get("OPENSHIFT_CI_TOKEN"),
 )
-@click.option("-n", "--openshift-ci-job-name", help="Openshift ci job name", show_default=True, type=click.STRING)
+@click.option(
+    "-n",
+    "--openshift-ci-job-name",
+    help="Openshift ci job name",
+    default=os.environ.get("JOB_NAME"),
+    show_default=True,
+    type=click.STRING,
+)
 @click.option(
     "-id",
     "--prow-triggering-job-id",
     help="Prow ID (prowjobid) of the job to be re-triggered. If empty, the job will be triggered immediately.",
+    default=os.environ.get("PROW_JOB_ID"),
     show_default=True,
     type=click.STRING,
 )
 @click.option(
     "--job-yaml-config-file",
-    help="""
-    \b
-    YAML file with configuration for job triggering.
-    See manifests/config.example.yaml for example.
-    """,
+    help="YAML file with configuration for job triggering. See manifests/config.example.yaml for example.",
     type=click.Path(exists=True),
 )
 @click.option(
