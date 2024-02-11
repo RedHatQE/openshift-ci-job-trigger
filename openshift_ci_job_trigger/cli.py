@@ -24,16 +24,13 @@ def get_prow_job_status(openshift_ci_token, triggering_job_id):
         headers=authorization_header(openshift_ci_token=openshift_ci_token),
     )
 
-    response_text = yaml.safe_load(response.text)
-    if response.ok:
-        return response_text["job_status"]
-
-    LOGGER.error(f"Job failed on: {response_text}. Response headers: {response.headers}")
-    raise click.Abort()
+    return yaml.safe_load(response.text).get("job_status")
 
 
 def wait_for_job_completed(openshift_ci_token, triggering_job_id):
-    for sample in TimeoutSampler(
+    LOGGER.info(f"Waiting for build {triggering_job_id} to end.")
+    current_job_status = None
+    for job_status in TimeoutSampler(
         wait_timeout=600,
         sleep=60,
         print_log=False,
@@ -41,19 +38,22 @@ def wait_for_job_completed(openshift_ci_token, triggering_job_id):
         openshift_ci_token=openshift_ci_token,
         triggering_job_id=triggering_job_id,
     ):
-        if sample and sample == "SUCCESS":
-            return
+        if job_status:
+            if job_status != "PENDING":
+                return
+            if current_job_status != job_status:
+                current_job_status = job_status
+                LOGGER.info(f"Job status: {current_job_status}")
 
 
 def verify_no_running_jobs(openshift_ci_job_name):
     response = requests.get(f"https://prow.ci.openshift.org/job-history/gs/origin-ci-test/logs/{openshift_ci_job_name}")
+
     if job_all_builds := re.search(r"allBuilds = (.*?);", response.text):
         all_builds = json.loads(job_all_builds.group(1))
-        LOGGER.error(
-            f"Job {openshift_ci_job_name} already has some runnig jobs: {[(job['ID'], job['Started'] )for job in all_builds if job['Result'] ==  'PENDING']
-}"
-        )
-        raise click.Abort()
+        if pending_jobs := [(job["ID"], job["Started"]) for job in all_builds if job["Result"] == "PENDING"]:
+            LOGGER.error(f"Job {openshift_ci_job_name} already has some runnig jobs: {pending_jobs}")
+            raise click.Abort()
 
 
 def triger_openshift_ci_job(
@@ -132,8 +132,6 @@ def main(**kwargs):
             triggering_job_id=triggering_job_id,
         )
 
-    # TODO: Check only one trigger per job.
-    # TODO: Check re-trigger when the job is running - do we need to wait for the 1st one to end or the retriggered job will be queued?
     # TODO: If need to wait - where do we run? A job in PSI? can we do that from openshift ci?
     verify_no_running_jobs(openshift_ci_job_name=openshift_ci_job_name)
     triger_openshift_ci_job(
