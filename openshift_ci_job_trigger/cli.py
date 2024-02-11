@@ -1,4 +1,5 @@
 import os
+import xmltodict
 
 import click
 import requests
@@ -7,7 +8,6 @@ from simple_logger.logger import get_logger
 from timeout_sampler import TimeoutSampler
 from pyaml_env import parse_config
 import json
-import re
 
 
 LOGGER = get_logger(name=os.path.split(__file__)[-1])
@@ -27,16 +27,16 @@ def get_prow_job_status(openshift_ci_token, triggering_job_id):
     return yaml.safe_load(response.text).get("job_status")
 
 
-def wait_for_job_completed(openshift_ci_token, triggering_job_id):
-    LOGGER.info(f"Waiting for build {triggering_job_id} to end.")
+def wait_for_job_completed(token, prow_job_id):
+    LOGGER.info(f"Waiting for build {prow_job_id} to end.")
     current_job_status = None
     for job_status in TimeoutSampler(
         wait_timeout=600,
         sleep=60,
         print_log=False,
         func=get_prow_job_status,
-        openshift_ci_token=openshift_ci_token,
-        triggering_job_id=triggering_job_id,
+        openshift_ci_token=token,
+        triggering_job_id=prow_job_id,
     ):
         if job_status:
             if job_status != "PENDING":
@@ -46,55 +46,64 @@ def wait_for_job_completed(openshift_ci_token, triggering_job_id):
                 LOGGER.info(f"Job status: {current_job_status}")
 
 
-def verify_no_running_jobs(openshift_ci_job_name):
-    response = requests.get(f"https://prow.ci.openshift.org/job-history/gs/origin-ci-test/logs/{openshift_ci_job_name}")
-
-    if job_all_builds := re.search(r"allBuilds = (.*?);", response.text):
-        all_builds = json.loads(job_all_builds.group(1))
-        if pending_jobs := [(job["ID"], job["Started"]) for job in all_builds if job["Result"] == "PENDING"]:
-            LOGGER.error(f"Job {openshift_ci_job_name} already has some runnig jobs: {pending_jobs}")
-            raise click.Abort()
-
-
-def triger_openshift_ci_job(
-    openshift_ci_token,
-    openshift_ci_job_name,
+def trigger_job(
+    token,
+    job_name,
 ):
     response = requests.post(
-        url=f"{GANGWAY_API_URL}{openshift_ci_job_name}",
-        headers=authorization_header(openshift_ci_token=openshift_ci_token),
+        url=f"{GANGWAY_API_URL}{job_name}",
+        headers=authorization_header(openshift_ci_token=token),
         json={"job_execution_type": "1"},
     )
 
     if not response.ok:
-        LOGGER.error(f"Failed to get job status: {response.headers["grpc-message"]}")
+        LOGGER.error(f"Failed to get job status: {response.headers['grpc-message']}")
         raise click.Abort()
 
-    LOGGER.success(
-        f"Successfully triggered job {openshift_ci_job_name}, prow job id: {json.loads(response.content.decode())['id']}"
+    LOGGER.success(f"Successfully triggered job {job_name}, prow job id: {json.loads(response.content.decode())['id']}")
+
+
+def get_tests_from_junit_operator_by_build_id(job_name, build_id):
+    response = requests.get(
+        f"https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/{job_name}/{build_id}/artifacts/junit_operator.xml"
     )
+    return xmltodict.parse(response.text)["testsuites"]["testsuite"]["testcase"]
+
+
+def is_build_failed_on_setup(tests_dict):
+    for test in tests_dict:
+        if test.get("failure") and "The collected steps of multi-stage phase pre" in test.get("system-out", ""):
+            return True
+
+    return False
 
 
 @click.command("job-trigger`")
 @click.option(
     "-t",
-    "--openshift-ci-token",
+    "--token",
     help="Openshift ci token, needed to trigger jobs.",
     default=os.environ.get("OPENSHIFT_CI_TOKEN"),
 )
 @click.option(
     "-n",
-    "--openshift-ci-job-name",
+    "--job-name",
     help="Openshift ci job name",
     default=os.environ.get("JOB_NAME"),
     show_default=True,
     type=click.STRING,
 )
 @click.option(
-    "-id",
-    "--prow-triggering-job-id",
+    "--prow-job-id",
     help="Prow ID (prowjobid) of the job to be re-triggered. If empty, the job will be triggered immediately.",
     default=os.environ.get("PROW_JOB_ID"),
+    show_default=True,
+    type=click.STRING,
+)
+@click.option(
+    "--build-id",
+    help="Openshift CI build ID of the job to be re-triggered.",
+    default=os.environ.get("BUILD_ID"),
     show_default=True,
     type=click.STRING,
 )
@@ -114,30 +123,36 @@ def main(**kwargs):
     if job_yaml_config_file := user_kwargs.get("job_yaml_config_file"):
         user_kwargs.update(parse_config(path=job_yaml_config_file, default_value=""))
 
-    if not (openshift_ci_token := kwargs.get("openshift_ci_token")):
+    if not (token := kwargs.get("token")):
         LOGGER.error(
-            "openshift ci token is mandatory. Either set `OPENSHIFT_CI_TOKEN` environment variable or pass `--openshift-ci-token`"
+            "openshift ci token is mandatory. Either set `OPENSHIFT_CI_TOKEN` environment variable or pass `--token`"
         )
         raise click.Abort()
 
-    if not (openshift_ci_job_name := kwargs.get("openshift_ci_job_name")):
+    if not (job_name := kwargs.get("job_name")):
         LOGGER.error(
-            "openshift ci job name is mandatory. Either set `JOB_NAME` environment variable or pass `--openshift-ci-job-name`"
+            "openshift ci job name is mandatory. Either set `JOB_NAME` environment variable or pass `--job-name`"
         )
         raise click.Abort()
 
-    if triggering_job_id := kwargs.get("prow_triggering_job_id"):
+    if not (build_id := kwargs.get("build_id")):
+        LOGGER.error(
+            "openshift ci build id is mandatory. Either set `BUILD_ID` environment variable or pass `--build-id`"
+        )
+        raise click.Abort()
+
+    if prow_job_id := kwargs.get("prow_job_id"):
         wait_for_job_completed(
-            openshift_ci_token=openshift_ci_token,
-            triggering_job_id=triggering_job_id,
+            token=token,
+            prow_job_id=prow_job_id,
         )
 
-    # TODO: If need to wait - where do we run? A job in PSI? can we do that from openshift ci?
-    verify_no_running_jobs(openshift_ci_job_name=openshift_ci_job_name)
-    triger_openshift_ci_job(
-        openshift_ci_token=openshift_ci_token,
-        openshift_ci_job_name=openshift_ci_job_name,
-    )
+    tests_dict = get_tests_from_junit_operator_by_build_id(job_name=job_name, build_id=build_id)
+    if is_build_failed_on_setup(tests_dict=tests_dict):
+        trigger_job(
+            token=token,
+            job_name=job_name,
+        )
 
 
 if __name__ == "__main__":
