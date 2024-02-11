@@ -60,12 +60,15 @@ def trigger_job(
         LOGGER.error(f"Failed to get job status: {response.headers['grpc-message']}")
         raise click.Abort()
 
-    LOGGER.success(f"Successfully triggered job {job_name}, prow job id: {json.loads(response.content.decode())['id']}")
+    LOGGER.success(
+        f"Successfully triggered job {job_name}, " f"prow job id: {json.loads(response.content.decode())['id']}"
+    )
 
 
 def get_tests_from_junit_operator_by_build_id(job_name, build_id):
     response = requests.get(
-        f"https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/{job_name}/{build_id}/artifacts/junit_operator.xml"
+        "https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/"
+        f"{job_name}/{build_id}/artifacts/junit_operator.xml"
     )
     return xmltodict.parse(response.text)["testsuites"]["testsuite"]["testcase"]
 
