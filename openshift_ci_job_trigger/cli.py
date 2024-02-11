@@ -6,6 +6,8 @@ import yaml
 from simple_logger.logger import get_logger
 from timeout_sampler import TimeoutSampler
 from pyaml_env import parse_config
+import json
+import re
 
 
 LOGGER = get_logger(name=os.path.split(__file__)[-1])
@@ -43,6 +45,17 @@ def wait_for_job_completed(openshift_ci_token, triggering_job_id):
             return
 
 
+def verify_no_running_jobs(openshift_ci_job_name):
+    response = requests.get(f"https://prow.ci.openshift.org/job-history/gs/origin-ci-test/logs/{openshift_ci_job_name}")
+    if job_all_builds := re.search(r"allBuilds = (.*?);", response.text):
+        all_builds = json.loads(job_all_builds.group(1))
+        LOGGER.error(
+            f"Job {openshift_ci_job_name} already has some runnig jobs: {[(job['ID'], job['Started'] )for job in all_builds if job['Result'] ==  'PENDING']
+}"
+        )
+        raise click.Abort()
+
+
 def triger_openshift_ci_job(
     openshift_ci_token,
     openshift_ci_job_name,
@@ -57,7 +70,9 @@ def triger_openshift_ci_job(
         LOGGER.error(f"Failed to get job status: {response.headers["grpc-message"]}")
         raise click.Abort()
 
-    LOGGER.success(f"Successfully triggered job {openshift_ci_job_name}")
+    LOGGER.success(
+        f"Successfully triggered job {openshift_ci_job_name}, prow job id: {json.loads(response.content.decode())['id']}"
+    )
 
 
 @click.command("job-trigger`")
@@ -120,6 +135,7 @@ def main(**kwargs):
     # TODO: Check only one trigger per job.
     # TODO: Check re-trigger when the job is running - do we need to wait for the 1st one to end or the retriggered job will be queued?
     # TODO: If need to wait - where do we run? A job in PSI? can we do that from openshift ci?
+    verify_no_running_jobs(openshift_ci_job_name=openshift_ci_job_name)
     triger_openshift_ci_job(
         openshift_ci_token=openshift_ci_token,
         openshift_ci_job_name=openshift_ci_job_name,
