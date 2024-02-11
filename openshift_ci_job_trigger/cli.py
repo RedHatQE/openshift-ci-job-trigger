@@ -75,7 +75,7 @@ def get_tests_from_junit_operator_by_build_id(job_name, build_id):
 
 def is_build_failed_on_setup(tests_dict):
     for test in tests_dict:
-        if test.get("failure") and test["name"] == "Run multi-stage test pre phase":
+        if test.get("failure") and test["@name"] == "Run multi-stage test pre phase":
             return True
 
     return False
