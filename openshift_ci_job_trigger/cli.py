@@ -99,10 +99,19 @@ def main(**kwargs):
     if job_yaml_config_file := user_kwargs.get("job_yaml_config_file"):
         user_kwargs.update(parse_config(path=job_yaml_config_file, default_value=""))
 
-    openshift_ci_token = kwargs.get("openshift_ci_token")
-    openshift_ci_job_name = kwargs.get("openshift_ci_job_name")
-    triggering_job_id = kwargs.get("prow_triggering_job_id")
-    if triggering_job_id:
+    if not (openshift_ci_token := kwargs.get("openshift_ci_token")):
+        LOGGER.error(
+            "openshift ci token is mandatory. Either set `OPENSHIFT_CI_TOKEN` environment variable or pass `--openshift-ci-token`"
+        )
+        raise click.Abort()
+
+    if not (openshift_ci_job_name := kwargs.get("openshift_ci_job_name")):
+        LOGGER.error(
+            "openshift ci job name is mandatory. Either set `JOB_NAME` environment variable or pass `--openshift-ci-job-name`"
+        )
+        raise click.Abort()
+
+    if triggering_job_id := kwargs.get("prow_triggering_job_id"):
         wait_for_job_completed(
             openshift_ci_token=openshift_ci_token,
             triggering_job_id=triggering_job_id,
