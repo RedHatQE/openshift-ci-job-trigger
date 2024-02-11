@@ -42,8 +42,8 @@ def wait_for_job_completed(token, prow_job_id):
             if job_status != "PENDING":
                 return
             if current_job_status != job_status:
-                LOGGER.info(f"Job status: {current_job_status}")
                 current_job_status = job_status
+                LOGGER.info(f"Job status: {current_job_status}")
 
 
 def trigger_job(
