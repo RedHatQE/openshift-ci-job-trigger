@@ -38,9 +38,14 @@ beautifulsoup4 = "^4.12.3"
 xmltodict = "^0.13.0"
 flask = "^3.0.2"
 shortuuid = "^1.0.11"
+python-simple-logger = "^1.0.10"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
+
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^8.0.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true

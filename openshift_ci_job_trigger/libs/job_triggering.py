@@ -11,7 +11,7 @@ from timeout_sampler import TimeoutSampler
 
 
 class JobTriggering:
-    def __init__(self, hook_data, flask_logger):
+    def __init__(self, hook_data, flask_logger, triggered_jobs_filepath=None):
         self.logger = flask_logger
 
         self.log_prefix = f"[{shortuuid.random(length=10)}]"
@@ -27,7 +27,7 @@ class JobTriggering:
         )
 
         self.gangway_api_url = "https://gangway-ci.apps.ci.l2s4.p1.openshiftapps.com/v1/executions/"
-        self.triggered_jobs_filepath = self.get_triggered_jobs_filepath()
+        self.triggered_jobs_filepath = triggered_jobs_filepath or self.get_triggered_jobs_filepath()
         self.authorization_header = {"Authorization": f"Bearer {self.token}"}
 
     def verify_hook_data(self):
@@ -57,13 +57,15 @@ class JobTriggering:
     def execute(self):
         if self.prow_job_id in self.read_job_triggering_file().get(self.job_name, []):
             self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
-            return
+            return False
 
         self.wait_for_job_completed()
 
         tests_dict = self.get_tests_from_junit_operator_by_build_id()
         if self.is_build_failed_on_setup(tests_dict=tests_dict):
             self.trigger_job()
+
+        return True
 
     def get_prow_job_status(self):
         self.logger.info(f"{self.log_prefix}  Get job status.")
@@ -77,19 +79,22 @@ class JobTriggering:
     def wait_for_job_completed(self):
         self.logger.info(f"{self.log_prefix} Waiting for build to end.")
         current_job_status = None
-        for job_status in TimeoutSampler(
+        sampler = TimeoutSampler(
             wait_timeout=600,
             sleep=60,
             print_log=False,
             func=self.get_prow_job_status,
-        ):
-            if job_status:
-                if job_status != "PENDING":
-                    self.logger.info(f"{self.log_prefix} Job ended. Status: {job_status}")
-                    return
-                if current_job_status != job_status:
-                    current_job_status = job_status
-                    self.logger.info(f"{self.log_prefix}  Job status: {current_job_status}")
+        )
+        for job_status in sampler:
+            if not job_status:
+                self.logger.error(f"{self.log_prefix} Prow build not found")
+                return
+            if job_status != "PENDING":
+                self.logger.info(f"{self.log_prefix} Job ended. Status: {job_status}")
+                return
+            if current_job_status != job_status:
+                current_job_status = job_status
+                self.logger.info(f"{self.log_prefix}  Job status: {current_job_status}")
 
     def save_job_data_to_file(self, prow_job_id):
         data = self.read_job_triggering_file()
