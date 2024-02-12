@@ -61,7 +61,9 @@ class JobTriggering:
 
         self.wait_for_job_completed()
 
-        tests_dict = self.get_tests_from_junit_operator_by_build_id()
+        tests_dict = self.get_testsuites_testcase_from_junit_operator(
+            junit_xml=self.get_tests_from_junit_operator_by_build_id()
+        )
         if self.is_build_failed_on_setup(tests_dict=tests_dict):
             self.trigger_job()
 
@@ -139,10 +141,14 @@ class JobTriggering:
         response = self.get_url_content(url=url)
 
         try:
-            return xmltodict.parse(response)["testsuites"]["testsuite"]["testcase"]
+            return xmltodict.parse(response)
         except xml.parsers.expat.ExpatError as _:
             self.logger.error(f"{self.log_prefix} Failed to read {url}. Response: {response}")
             raise
+
+    @staticmethod
+    def get_testsuites_testcase_from_junit_operator(junit_xml):
+        return junit_xml["testsuites"]["testsuite"]["testcase"]
 
     def is_build_failed_on_setup(self, tests_dict):
         for test in tests_dict:
