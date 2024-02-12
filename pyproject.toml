@@ -37,6 +37,7 @@ pyaml-env = "^1.2.1"
 ipdb = "^0.13.13"
 beautifulsoup4 = "^4.12.3"
 xmltodict = "^0.13.0"
+flask = "^3.0.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
