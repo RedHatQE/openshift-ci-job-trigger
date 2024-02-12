@@ -14,14 +14,14 @@ LOGGER = get_logger(name=os.path.split(__file__)[-1])
 GANGWAY_API_URL = "https://gangway-ci.apps.ci.l2s4.p1.openshiftapps.com/v1/executions/"
 
 
-def authorization_header(openshift_ci_token):
-    return {"Authorization": f"Bearer {openshift_ci_token}"}
+def authorization_header(token):
+    return {"Authorization": f"Bearer {token}"}
 
 
-def get_prow_job_status(openshift_ci_token, triggering_job_id):
+def get_prow_job_status(token, triggering_job_id):
     response = requests.get(
         url=f"{GANGWAY_API_URL}{triggering_job_id}",
-        headers=authorization_header(openshift_ci_token=openshift_ci_token),
+        headers=authorization_header(token=token),
     )
 
     return yaml.safe_load(response.text).get("job_status")
@@ -35,7 +35,7 @@ def wait_for_job_completed(token, prow_job_id):
         sleep=60,
         print_log=False,
         func=get_prow_job_status,
-        openshift_ci_token=token,
+        token=token,
         triggering_job_id=prow_job_id,
     ):
         if job_status:
@@ -52,7 +52,7 @@ def trigger_job(
 ):
     response = requests.post(
         url=f"{GANGWAY_API_URL}{job_name}",
-        headers=authorization_header(openshift_ci_token=token),
+        headers=authorization_header(token=token),
         json={"job_execution_type": "1"},
     )
 
@@ -149,6 +149,7 @@ def main(**kwargs):
         )
 
     tests_dict = get_tests_from_junit_operator_by_build_id(job_name=job_name, build_id=build_id)
+    # TODO: trigger only once
     if is_build_failed_on_setup(tests_dict=tests_dict):
         trigger_job(
             token=token,
