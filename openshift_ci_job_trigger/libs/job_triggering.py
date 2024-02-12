@@ -139,10 +139,10 @@ class JobTriggering:
             self.logger.error(f"{self.log_prefix} Failed to read {url}. Response: {response}")
             raise
 
-    @staticmethod
-    def is_build_failed_on_setup(tests_dict):
+    def is_build_failed_on_setup(self, tests_dict):
         for test in tests_dict:
             if test.get("failure") and test["@name"] == "Run multi-stage test pre phase":
+                self.logger.info(f"{self.log_prefix} Job failed during `pre phase`.")
                 return True
 
         return False
