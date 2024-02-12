@@ -1,6 +1,6 @@
 import json
-import os
 from json import JSONDecodeError
+from pathlib import Path
 
 import requests
 import xmltodict
@@ -20,7 +20,7 @@ class JobTriggering:
         self.verify_hook_data()
 
         self.gangway_api_url = "https://gangway-ci.apps.ci.l2s4.p1.openshiftapps.com/v1/executions/"
-        self.triggered_jobs_filepath = os.path.join("/tmp", "openshift_ci_triggered_jobs.json")
+        self.triggered_jobs_filepath = self.get_triggered_jobs_filepath()
         self.authorization_header = {"Authorization": f"Bearer {self.token}"}
 
     def verify_hook_data(self):
@@ -39,6 +39,14 @@ class JobTriggering:
         if not all((self.token, self.job_name, self.build_id, self.prow_job_id)):
             raise ValueError("Missing parameters")
 
+    @staticmethod
+    def get_triggered_jobs_filepath():
+        filepath = Path("/tmp", "openshift_ci_triggered_jobs.json")
+        if not filepath.exists():
+            filepath.touch()
+
+        return filepath
+
     def execute(self):
         if self.prow_job_id in self.read_job_triggering_file().get(self.job_name, []):
             self.logger.warning(
@@ -53,12 +61,12 @@ class JobTriggering:
             self.trigger_job()
 
     def get_prow_job_status(self):
-        response = requests.get(
+        response = self.get_url_data(
             url=f"{self.gangway_api_url}{self.prow_job_id}",
             headers=self.authorization_header,
         )
 
-        return yaml.safe_load(response.text).get("job_status")
+        return yaml.safe_load(response).get("job_status")
 
     def wait_for_job_completed(self):
         self.logger.info(f"Waiting for build {self.prow_job_id} to end.")
@@ -71,6 +79,7 @@ class JobTriggering:
         ):
             if job_status:
                 if job_status != "PENDING":
+                    self.logger.info(f"Job {self.job_name} prow id {self.prow_job_id} ended. Status: {job_status}")
                     return
                 if current_job_status != job_status:
                     current_job_status = job_status
@@ -78,14 +87,15 @@ class JobTriggering:
 
     def save_job_data_to_file(self, prow_job_id):
         data = self.read_job_triggering_file()
+        self.logger.info(f"Save triggering job {self.job_name} data to file")
 
-        with open(self.triggered_jobs_filepath, "w") as fd_write:
-            new_data = data.setdefault(self.job_name, []).append(prow_job_id)
-            data.update(new_data)
+        with open(self.triggered_jobs_filepath, "a+") as fd_write:
+            data.setdefault(self.job_name, []).append(prow_job_id)
             fd_write.write(json.dumps(data))
 
     def read_job_triggering_file(self):
-        with open(self.triggered_jobs_filepath) as fd_read:
+        self.logger.info("Reading triggering job file")
+        with open(self.triggered_jobs_filepath, "r+") as fd_read:
             try:
                 data = json.loads(fd_read.read())
             except JSONDecodeError:
@@ -100,18 +110,20 @@ class JobTriggering:
         )
 
         if not response.ok:
-            self.logger.error(f"Failed to get job status: {response.headers['grpc-message']}")
+            raise requests.exceptions.RequestException(f"Failed to get job status: {response.headers['grpc-message']}")
 
         prow_job_id = json.loads(response.content.decode())["id"]
-        self.logger.success(f"Successfully triggered job {self.job_name}, prow job id: {prow_job_id}")
+        self.logger.info(f"Successfully triggered job {self.job_name}, prow job id: {prow_job_id}")
         self.save_job_data_to_file(prow_job_id=prow_job_id)
 
     def get_tests_from_junit_operator_by_build_id(self):
-        response = requests.get(
-            "https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/"
-            f"{self.job_name}/{self.build_id}/artifacts/junit_operator.xml"
+        response = self.get_url_data(
+            url=(
+                "https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/test-platform-results/logs/"
+                f"{self.job_name}/{self.build_id}/artifacts/junit_operator.xml"
+            )
         )
-        return xmltodict.parse(response.text)["testsuites"]["testsuite"]["testcase"]
+        return xmltodict.parse(response)["testsuites"]["testsuite"]["testcase"]
 
     @staticmethod
     def is_build_failed_on_setup(tests_dict):
@@ -120,3 +132,15 @@ class JobTriggering:
                 return True
 
         return False
+
+    @staticmethod
+    def get_url_data(**kwargs):
+        response = requests.get(**kwargs)
+
+        response_text = response.text
+        if response.ok:
+            return response_text
+
+        raise requests.exceptions.RequestException(
+            f"Failed to retrieve url {kwargs['url']} on {response_text}. Status {response.status_code}"
+        )
