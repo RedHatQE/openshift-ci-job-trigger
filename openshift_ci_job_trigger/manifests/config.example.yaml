@@ -1,3 +1,4 @@
-openshift_ci_token: !ENV "${OPENSHIFT_CI_TOKEN}"
-openshift_ci_job_name: !ENV "${JOB_NAME}"
-prow_triggering_job_id: !ENV "${PROW_JOB_ID}"
+token: !ENV "${OPENSHIFT_CI_TOKEN}"
+job_name: !ENV "${JOB_NAME}"
+prow_job_id: !ENV "${PROW_JOB_ID}"
+build_id: !ENV "${BUILD_ID}"

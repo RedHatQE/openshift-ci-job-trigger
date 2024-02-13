@@ -29,16 +29,23 @@ openshift-cli-installer = "openshift_ci_job_trigger.cli:main"
 [tool.poetry.dependencies]
 python = "^3.8"
 click = "^8.1.7"
-python-simple-logger = "^1.0.10"
 requests = "^2.31.0"
 pyyaml = "^6.0.1"
 timeout-sampler = "^0.0.6"
 pyaml-env = "^1.2.1"
 ipdb = "^0.13.13"
 beautifulsoup4 = "^4.12.3"
+xmltodict = "^0.13.0"
+flask = "^3.0.2"
+shortuuid = "^1.0.11"
+python-simple-logger = "^1.0.10"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
+
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^8.0.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
