@@ -59,7 +59,8 @@ class JobTriggering:
             self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
             return False
 
-        self.wait_for_job_completed()
+        if not self.wait_for_job_completed():
+            raise requests.exceptions.RequestException()
 
         tests_dict = self.get_testsuites_testcase_from_junit_operator(
             junit_xml=self.get_tests_from_junit_operator_by_build_id()
@@ -71,16 +72,19 @@ class JobTriggering:
 
     def get_prow_job_status(self):
         self.logger.info(f"{self.log_prefix}  Get job status.")
-        response = self.get_url_content(
-            url=f"{self.gangway_api_url}{self.prow_job_id}",
-            headers=self.authorization_header,
-        )
+        try:
+            response = self.get_url_content(
+                url=f"{self.gangway_api_url}{self.prow_job_id}",
+                headers=self.authorization_header,
+            )
 
-        return yaml.safe_load(response).get("job_status")
+            return yaml.safe_load(response).get("job_status")
+
+        except requests.exceptions.RequestException:
+            return ""
 
     def wait_for_job_completed(self):
         self.logger.info(f"{self.log_prefix} Waiting for build to end.")
-        current_job_status = None
         sampler = TimeoutSampler(
             wait_timeout=600,
             sleep=60,
@@ -90,13 +94,10 @@ class JobTriggering:
         for job_status in sampler:
             if not job_status:
                 self.logger.error(f"{self.log_prefix} Prow build not found")
-                return
+                return False
             if job_status != "PENDING":
                 self.logger.info(f"{self.log_prefix} Job ended. Status: {job_status}")
-                return
-            if current_job_status != job_status:
-                current_job_status = job_status
-                self.logger.info(f"{self.log_prefix}  Job status: {current_job_status}")
+                return True
 
     def save_job_data_to_file(self, prow_job_id):
         data = self.read_job_triggering_file()
