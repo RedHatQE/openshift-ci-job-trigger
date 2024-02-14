@@ -103,7 +103,7 @@ class JobTriggering:
         data = self.read_job_triggering_file()
         self.logger.info(f"{self.log_prefix} Save triggering job data to file")
 
-        with open(self.triggered_jobs_filepath, "a+") as fd_write:
+        with open(self.triggered_jobs_filepath, "w") as fd_write:
             data.setdefault(self.job_name, []).append(prow_job_id)
             fd_write.write(json.dumps(data))
 
@@ -157,6 +157,7 @@ class JobTriggering:
                 self.logger.info(f"{self.log_prefix} Job failed during `pre phase`.")
                 return True
 
+        self.logger.info(f"{self.log_prefix} Job did not fail during `pre phase` and will not be re-triggered.")
         return False
 
     def get_url_content(self, **kwargs):
