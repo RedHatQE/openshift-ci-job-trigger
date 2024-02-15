@@ -54,16 +54,17 @@ class TestJobTriggering:
 
     @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
     def test_add_job_trigger(self, tmpdir, mocker, junit_file, job_triggering):
+        job_trigger_module_path = "openshift_ci_job_trigger.libs.job_triggering.JobTriggering"
         mocker.patch(
-            "openshift_ci_job_trigger.libs.job_triggering.JobTriggering.trigger_job",
+            f"{job_trigger_module_path}.trigger_job",
             return_value=TestJobTriggering.PROW_JOB_ID,
         )
         mocker.patch(
-            "openshift_ci_job_trigger.libs.job_triggering.JobTriggering.wait_for_job_completed",
+            f"{job_trigger_module_path}.wait_for_job_completed",
             return_value=True,
         )
         mocker.patch(
-            "openshift_ci_job_trigger.libs.job_triggering.JobTriggering.get_tests_from_junit_operator_by_build_id",
+            f"{job_trigger_module_path}.get_tests_from_junit_operator_by_build_id",
             return_value=junit_file,
         )
 

@@ -1,5 +1,8 @@
+import random
 import sqlite3
 from pathlib import Path
+
+from timeout_sampler import TimeoutSampler
 
 
 class DB:
@@ -37,7 +40,16 @@ class DB:
         return result
 
     def write(self, job_name, prow_job_id):
-        self.cursor.execute(
-            f"INSERT INTO {self.table_name} (job_name, prow_job_id) VALUES ('{job_name}', '{prow_job_id}')"
-        )
-        self.connection.commit()
+        def _insert_to_db(_job_name, _prow_job_id):
+            self.cursor.execute(
+                f"INSERT INTO {self.table_name} " f"(job_name, prow_job_id) VALUES ('{_job_name}', '{_prow_job_id}')"
+            )
+
+        for _ in TimeoutSampler(
+            wait_timeout=20,
+            sleep=random.randint(1, 5),
+            func=_insert_to_db,
+            _job_name=job_name,
+            _prow_job_id=prow_job_id,
+        ):
+            return self.connection.commit()
