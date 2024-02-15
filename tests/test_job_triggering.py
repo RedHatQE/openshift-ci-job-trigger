@@ -1,4 +1,5 @@
 import copy
+import pathlib
 
 import pytest
 from simple_logger.logger import get_logger
@@ -52,7 +53,7 @@ class TestJobTriggering:
     PROW_JOB_ID = "123456"
 
     @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
-    def test_add_job_trigger(self, mocker, junit_file, job_triggering):
+    def test_add_job_trigger(self, tmpdir, mocker, junit_file, job_triggering):
         mocker.patch(
             "openshift_ci_job_trigger.libs.job_triggering.JobTriggering.trigger_job",
             return_value=TestJobTriggering.PROW_JOB_ID,
@@ -66,7 +67,9 @@ class TestJobTriggering:
             return_value=junit_file,
         )
 
-        assert job_triggering.execute_trigger(), "Job should be triggered"
+        assert job_triggering.execute_trigger(
+            job_db_path=pathlib.Path(tmpdir, "job_triggering_test.db")
+        ), "Job should be triggered"
 
     def test_already_triggered(self, hook_data_dict):
         hook_data_dict["prow_job_id"] = TestJobTriggering.PROW_JOB_ID

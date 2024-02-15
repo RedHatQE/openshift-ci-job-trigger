@@ -45,8 +45,8 @@ class JobTriggering:
         if not all((self.token, self.job_name, self.build_id, self.prow_job_id)):
             raise ValueError(f"{self.log_prefix} Missing parameters")
 
-    def execute_trigger(self):
-        with DB() as database:
+    def execute_trigger(self, job_db_path=None):
+        with DB(job_db_path=job_db_path) as database:
             if database.check_prow_job_id_in_db(job_name=self.job_name, prow_job_id=self.prow_job_id):
                 self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
                 return False
@@ -59,7 +59,7 @@ class JobTriggering:
         )
         if self.is_build_failed_on_setup(tests_dict=tests_dict):
             prow_job_id = self.trigger_job()
-            with DB() as database:
+            with DB(job_db_path=job_db_path) as database:
                 database.write(job_name=self.job_name, prow_job_id=prow_job_id)
                 self.logger.info(f"{self.log_prefix} Save job data to DB")
 
