@@ -4,30 +4,41 @@ import pytest
 from simple_logger.logger import get_logger
 
 from openshift_ci_job_trigger.libs.job_triggering import JobTriggering
-from tests.constants import REQUEST_JSON
+import xmltodict
 
 LOGGER = get_logger(name=__name__)
 
 
 @pytest.fixture()
-def request_json():
-    return copy.deepcopy(REQUEST_JSON)
+def junit_file(request):
+    with open(request.param) as fd:
+        return xmltodict.parse(fd.read())
+
+
+@pytest.fixture()
+def hook_data_dict():
+    return copy.deepcopy({"job_name": "periodic-test-job", "build_id": "1", "prow_job_id": "123456", "token": "token"})
+
+
+@pytest.fixture(scope="class")
+def job_triggering(hook_data_dict):
+    return JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
 
 
 @pytest.mark.parametrize("param", ["job_name", "build_id", "prow_job_id", "token"])
-def test_verify_job_trigger_mandatory_params(request_json, param):
-    request_json.pop(param)
+def test_verify_job_trigger_mandatory_params(hook_data_dict, param):
+    hook_data_dict.pop(param)
 
     with pytest.raises(ValueError):
-        JobTriggering(hook_data=request_json, flask_logger=LOGGER)
+        JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
 
 
 class TestJobTriggering:
     JOB_NAME = "periodic-ci-CSPI-QE-MSI-openshift-ci-trigger-poc-test-fail-setup"
     PROW_JOB_ID = "123456"
 
-    def test_add_job_trigger(self, mocker, get_junit_file, request_json):
-        job_triggering = JobTriggering(hook_data=request_json, flask_logger=LOGGER)
+    @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
+    def test_add_job_trigger(self, mocker, junit_file, job_triggering):
         mocker.patch(
             "openshift_ci_job_trigger.libs.job_triggering.JobTriggering.trigger_job",
             return_value=TestJobTriggering.PROW_JOB_ID,
@@ -38,11 +49,28 @@ class TestJobTriggering:
         )
         mocker.patch(
             "openshift_ci_job_trigger.libs.job_triggering.JobTriggering.get_tests_from_junit_operator_by_build_id",
-            return_value=get_junit_file(filepath="tests/manifests/junit_operator_failed_pre_phase.xml"),
+            return_value=junit_file,
         )
 
         assert job_triggering.execute_trigger(), "Job should be triggered"
 
-    def test_already_triggered(request_json):
-        job_triggering = JobTriggering(hook_data=request_json, flask_logger=LOGGER)
+    def test_already_triggered(self, hook_data_dict):
+        hook_data_dict["prow_job_id"] = TestJobTriggering.PROW_JOB_ID
+        job_triggering = JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
         assert not job_triggering.execute_trigger(), "Job should not be triggered"
+
+
+class TestFailedJobXML:
+    @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
+    def test_failed_job_in_pre_phase(self, junit_file, job_triggering):
+        tests_dict = job_triggering.get_testsuites_testcase_from_junit_operator(junit_xml=junit_file())
+        assert job_triggering.is_build_failed_on_setup(
+            tests_dict=tests_dict
+        ), "Job should fail on pre phase but did not"
+
+    @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_test_phase.xml"], indirect=True)
+    def test_failed_job_in_tests_phase(self, junit_file, job_triggering):
+        tests_dict = job_triggering.get_testsuites_testcase_from_junit_operator(junit_xml=junit_file())
+        assert not job_triggering.is_build_failed_on_setup(
+            tests_dict=tests_dict
+        ), "Job should fail on test phase but did not"
