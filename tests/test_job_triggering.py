@@ -3,6 +3,7 @@ import copy
 import pytest
 from simple_logger.logger import get_logger
 
+from openshift_ci_job_trigger.libs.job_db import DB
 from openshift_ci_job_trigger.libs.job_triggering import JobTriggering
 from tests.constants import REQUEST_JSON
 
@@ -23,14 +24,8 @@ def test_verify_job_trigger_mandatory_params(request_json, param):
 
 
 def test_already_triggered(request_json):
-    job_trigger = JobTriggering(
-        hook_data=request_json,
-        flask_logger=LOGGER,
-        triggered_jobs_filepath="tests/manifests/openshift_ci_triggered_jobs.json",
-    )
-    assert not job_trigger.execute(), "Job was triggered but it should not"
-
-
-def test_get_triggered_jobs_filepath(request_json):
-    filepath = JobTriggering(hook_data=request_json, flask_logger=LOGGER).get_triggered_jobs_filepath()
-    assert filepath.exists(), f"File {filepath} does not exist"
+    with DB() as database:
+        assert not database.check_prow_job_id_in_db(
+            job_name="periodic-ci-CSPI-QE-MSI-openshift-ci-trigger-poc-test-fail-setup",
+            prow_job_id="2Q9mghKLbecrCkxNZuJZkQ",
+        ), "Job exist in DB"

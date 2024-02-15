@@ -73,6 +73,17 @@ files = [
 ]
 
 [[package]]
+name = "cachetools"
+version = "5.3.2"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cachetools-5.3.2-py3-none-any.whl", hash = "sha256:861f35a13a451f94e301ce2bec7cac63e881232ccce7ed67fab9b5df4d3beaa1"},
+    {file = "cachetools-5.3.2.tar.gz", hash = "sha256:086ee420196f7b2ab9ca2db2520aca326318b68fe5ba8bc4d49cca91add450f2"},
+]
+
+[[package]]
 name = "certifi"
 version = "2024.2.2"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -287,6 +298,29 @@ async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
 
 [[package]]
+name = "google-auth"
+version = "2.27.0"
+description = "Google Authentication Library"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "google-auth-2.27.0.tar.gz", hash = "sha256:e863a56ccc2d8efa83df7a80272601e43487fa9a728a376205c86c26aaefa821"},
+    {file = "google_auth-2.27.0-py2.py3-none-any.whl", hash = "sha256:8e4bad367015430ff253fe49d500fdc3396c1a434db5740828c728e45bcce245"},
+]
+
+[package.dependencies]
+cachetools = ">=2.0.0,<6.0"
+pyasn1-modules = ">=0.2.1"
+rsa = ">=3.1.4,<5"
+
+[package.extras]
+aiohttp = ["aiohttp (>=3.6.2,<4.0.0.dev0)", "requests (>=2.20.0,<3.0.0.dev0)"]
+enterprise-cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
+pyopenssl = ["cryptography (>=38.0.3)", "pyopenssl (>=20.0.0)"]
+reauth = ["pyu2f (>=0.1.5)"]
+requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
+
+[[package]]
 name = "idna"
 version = "3.6"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -430,6 +464,32 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
+name = "kubernetes"
+version = "29.0.0"
+description = "Kubernetes python client"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "kubernetes-29.0.0-py2.py3-none-any.whl", hash = "sha256:ab8cb0e0576ccdfb71886366efb102c6a20f268d817be065ce7f9909c631e43e"},
+    {file = "kubernetes-29.0.0.tar.gz", hash = "sha256:c4812e227ae74d07d53c88293e564e54b850452715a59a927e7e1bc6b9a60459"},
+]
+
+[package.dependencies]
+certifi = ">=14.05.14"
+google-auth = ">=1.0.1"
+oauthlib = ">=3.2.2"
+python-dateutil = ">=2.5.3"
+pyyaml = ">=5.4.1"
+requests = "*"
+requests-oauthlib = "*"
+six = ">=1.9.0"
+urllib3 = ">=1.24.2"
+websocket-client = ">=0.32.0,<0.40.0 || >0.40.0,<0.41.dev0 || >=0.43.dev0"
+
+[package.extras]
+adal = ["adal (>=1.0.2)"]
+
+[[package]]
 name = "markupsafe"
 version = "2.1.5"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -511,6 +571,77 @@ files = [
 
 [package.dependencies]
 traitlets = "*"
+
+[[package]]
+name = "oauthlib"
+version = "3.2.2"
+description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "oauthlib-3.2.2-py3-none-any.whl", hash = "sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca"},
+    {file = "oauthlib-3.2.2.tar.gz", hash = "sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918"},
+]
+
+[package.extras]
+rsa = ["cryptography (>=3.0.0)"]
+signals = ["blinker (>=1.4.0)"]
+signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
+
+[[package]]
+name = "openshift-python-utilities"
+version = "5.0.26"
+description = "A utilities repository for https://github.com/RedHatQE/openshift-python-wrapper"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "openshift_python_utilities-5.0.26.tar.gz", hash = "sha256:6e693cd1493d33ed07bd428af4fa4d15ecba904c4dd7903ad7fb885fc85f0302"},
+]
+
+[package.dependencies]
+colorlog = ">=6.7.0,<7.0.0"
+openshift-python-wrapper = ">=10.0.4"
+openshift-python-wrapper-data-collector = ">=1.0.4"
+pytest = ">=8.0.0,<9.0.0"
+python-simple-logger = ">=1.0.5"
+pyyaml = ">=6.0.1,<7.0.0"
+timeout-sampler = ">=0.0.1"
+
+[[package]]
+name = "openshift-python-wrapper"
+version = "10.0.11"
+description = "Wrapper around https://github.com/kubernetes-client/python"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "openshift_python_wrapper-10.0.11.tar.gz", hash = "sha256:31a3df30a25a91a4a3ce738dc528a0918259ca30a91e91b1f3bb4c1584e46241"},
+]
+
+[package.dependencies]
+colorlog = ">=6.7.0,<7.0.0"
+jinja2 = ">=3.1.2,<4.0.0"
+kubernetes = ">=29.0.0,<30.0.0"
+packaging = ">=23.1,<24.0"
+python-benedict = ">=0.33.0,<0.34.0"
+python-simple-logger = ">=1.0.6"
+timeout-sampler = ">=0.0.2"
+xmltodict = ">=0.13.0,<0.14.0"
+
+[[package]]
+name = "openshift-python-wrapper-data-collector"
+version = "1.0.17"
+description = "Data collector for https://github.com/openshift/openshift-python-wrapper when running with PyTest"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "openshift_python_wrapper_data_collector-1.0.17.tar.gz", hash = "sha256:1f769d3e9d481b6b34dd7f3b899ad708d7b54e4a8530f692a70368816ba4d29a"},
+]
+
+[package.dependencies]
+openshift-python-wrapper = ">=10.0.0"
+pytest = ">=8.0.0,<9.0.0"
+pytest-testconfig = ">=0.2.0,<0.3.0"
+pyyaml = ">=6.0.1,<7.0.0"
 
 [[package]]
 name = "packaging"
@@ -635,6 +766,31 @@ PyYAML = ">=5.0,<=7.0"
 test = ["pytest"]
 
 [[package]]
+name = "pyasn1"
+version = "0.5.1"
+description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+files = [
+    {file = "pyasn1-0.5.1-py2.py3-none-any.whl", hash = "sha256:4439847c58d40b1d0a573d07e3856e95333f1976294494c325775aeca506eb58"},
+    {file = "pyasn1-0.5.1.tar.gz", hash = "sha256:6d391a96e59b23130a5cfa74d6fd7f388dbbe26cc8f1edf39fdddf08d9d6676c"},
+]
+
+[[package]]
+name = "pyasn1-modules"
+version = "0.3.0"
+description = "A collection of ASN.1-based protocols modules"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+files = [
+    {file = "pyasn1_modules-0.3.0-py2.py3-none-any.whl", hash = "sha256:d3ccd6ed470d9ffbc716be08bd90efbd44d0734bc9303818f7336070984a162d"},
+    {file = "pyasn1_modules-0.3.0.tar.gz", hash = "sha256:5bd01446b736eb9d31512a30d46c1ac3395d676c6f3cafa4c03eb54b9925631c"},
+]
+
+[package.dependencies]
+pyasn1 = ">=0.4.6,<0.6.0"
+
+[[package]]
 name = "pygments"
 version = "2.17.2"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -648,6 +804,30 @@ files = [
 [package.extras]
 plugins = ["importlib-metadata"]
 windows-terminal = ["colorama (>=0.4.6)"]
+
+[[package]]
+name = "pylero"
+version = "0.0.8"
+description = "Python SDK for Polarion"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pylero-0.0.8.tar.gz", hash = "sha256:a41e3cc73e8787846fbfde49495c3e03dca3183e074edf9249ea2437961704e4"},
+]
+
+[package.dependencies]
+click = "*"
+suds = "*"
+
+[[package]]
+name = "pysqlite3"
+version = "0.5.2"
+description = "DB-API 2.0 interface for Sqlite 3.x"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pysqlite3-0.5.2.tar.gz", hash = "sha256:0abc1756e8b39bd51c303e8fac37497ccaccc7b237c89fe3cf47ee8e614c590b"},
+]
 
 [[package]]
 name = "pytest"
@@ -672,6 +852,73 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+name = "pytest-testconfig"
+version = "0.2.0"
+description = "Test configuration plugin for pytest."
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+files = [
+    {file = "pytest-testconfig-0.2.0.tar.gz", hash = "sha256:0fa9e210bc2dd83d7408470cea8fb6e607576551bb3b1f9524cb51d8554a3da6"},
+    {file = "pytest_testconfig-0.2.0-py3-none-any.whl", hash = "sha256:0cfaaf4f47e0cf84358ec8dd2294df0358da2bc29730069aad2b4a2094c1a295"},
+]
+
+[package.dependencies]
+pytest = ">=3.5.0"
+pyyaml = "*"
+
+[[package]]
+name = "python-benedict"
+version = "0.33.1"
+description = "python-benedict is a dict subclass with keylist/keypath/keyattr support, normalized I/O operations (base64, csv, ini, json, pickle, plist, query-string, toml, xls, xml, yaml) and many utilities... for humans, obviously."
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-benedict-0.33.1.tar.gz", hash = "sha256:e65ecfc16b505b0fefa08ed97c65f6f93cf32c0309dd2e1614fc0f58f22b2c4e"},
+    {file = "python_benedict-0.33.1-py3-none-any.whl", hash = "sha256:8838ebe33ed7508d37472346e67516fcf525ebc717a6f48b37aa00e0b89bc463"},
+]
+
+[package.dependencies]
+python-fsutil = ">=0.9.3,<1.0.0"
+python-slugify = ">=7.0.0,<9.0.0"
+requests = ">=2.26.0,<3.0.0"
+
+[package.extras]
+all = ["python-benedict[io,parse,s3]"]
+html = ["beautifulsoup4 (>=4.12.0,<5.0.0)", "python-benedict[xml]"]
+io = ["python-benedict[html,toml,xls,xml,yaml]"]
+parse = ["ftfy (>=6.0.0,<7.0.0)", "mailchecker (>=4.1.0,<7.0.0)", "phonenumbers (>=8.12.0,<9.0.0)", "python-dateutil (>=2.8.0,<3.0.0)"]
+s3 = ["boto3 (>=1.24.89,<2.0.0)"]
+toml = ["toml (>=0.10.2,<1.0.0)"]
+xls = ["openpyxl (>=3.0.0,<4.0.0)", "xlrd (>=2.0.0,<3.0.0)"]
+xml = ["xmltodict (>=0.12.0,<1.0.0)"]
+yaml = ["pyyaml (>=6.0,<7.0)"]
+
+[[package]]
+name = "python-dateutil"
+version = "2.8.2"
+description = "Extensions to the standard Python datetime module"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+files = [
+    {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
+    {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
+name = "python-fsutil"
+version = "0.13.1"
+description = "high-level file-system operations for lazy devs."
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-fsutil-0.13.1.tar.gz", hash = "sha256:302b0a1739b85151df6e6fddb1593a8fb9648c655fad0fac6c66c21bce900c13"},
+    {file = "python_fsutil-0.13.1-py3-none-any.whl", hash = "sha256:b4ad4c57c243ba46ee5aacebe58ce7a6f62ddeff20ea53e52afc420884b5e544"},
+]
+
+[[package]]
 name = "python-simple-logger"
 version = "1.0.10"
 description = "A simple logger for python"
@@ -683,6 +930,38 @@ files = [
 
 [package.dependencies]
 colorlog = ">=6.7.0,<7.0.0"
+
+[[package]]
+name = "python-slugify"
+version = "8.0.4"
+description = "A Python slugify application that also handles Unicode"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "python-slugify-8.0.4.tar.gz", hash = "sha256:59202371d1d05b54a9e7720c5e038f928f45daaffe41dd10822f3907b937c856"},
+    {file = "python_slugify-8.0.4-py2.py3-none-any.whl", hash = "sha256:276540b79961052b66b7d116620b36518847f52d5fd9e3a70164fc8c50faa6b8"},
+]
+
+[package.dependencies]
+text-unidecode = ">=1.3"
+
+[package.extras]
+unidecode = ["Unidecode (>=1.1.1)"]
+
+[[package]]
+name = "python-utility-scripts"
+version = "0.0.4"
+description = "Python utility scripts"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "python_utility_scripts-0.0.4.tar.gz", hash = "sha256:fcb4eb6b3c2e680ab357dd501cc331d756fc2739cfba5ac4d89a039584fe39f7"},
+]
+
+[package.dependencies]
+openshift-python-utilities = ">=5.0.23,<6.0.0"
+pylero = ">=0.0.8,<0.0.9"
+python-simple-logger = ">=1.0.8,<2.0.0"
 
 [[package]]
 name = "pyyaml"
@@ -709,7 +988,6 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
-    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -766,6 +1044,38 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "requests-oauthlib"
+version = "1.3.1"
+description = "OAuthlib authentication support for Requests."
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "requests-oauthlib-1.3.1.tar.gz", hash = "sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a"},
+    {file = "requests_oauthlib-1.3.1-py2.py3-none-any.whl", hash = "sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5"},
+]
+
+[package.dependencies]
+oauthlib = ">=3.0.0"
+requests = ">=2.0.0"
+
+[package.extras]
+rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
+
+[[package]]
+name = "rsa"
+version = "4.9"
+description = "Pure-Python RSA implementation"
+optional = false
+python-versions = ">=3.6,<4"
+files = [
+    {file = "rsa-4.9-py3-none-any.whl", hash = "sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7"},
+    {file = "rsa-4.9.tar.gz", hash = "sha256:e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21"},
+]
+
+[package.dependencies]
+pyasn1 = ">=0.1.3"
+
+[[package]]
 name = "shortuuid"
 version = "1.0.11"
 description = "A generator library for concise, unambiguous and URL-safe UUIDs."
@@ -816,6 +1126,28 @@ pure-eval = "*"
 
 [package.extras]
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
+
+[[package]]
+name = "suds"
+version = "1.1.2"
+description = "Lightweight SOAP client (community fork)"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "suds-1.1.2-py3-none-any.whl", hash = "sha256:e421744c393d876127f1996be4d7c6154476c0b0f543f9cb436f4add5b916c9d"},
+    {file = "suds-1.1.2.tar.gz", hash = "sha256:1d5cfa74117193b244a4233f246c483d9f41198b448c5f14a8bad11c4f649f2b"},
+]
+
+[[package]]
+name = "text-unidecode"
+version = "1.3"
+description = "The most basic Text::Unidecode port"
+optional = false
+python-versions = "*"
+files = [
+    {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
+    {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
+]
 
 [[package]]
 name = "timeout-sampler"
@@ -896,6 +1228,22 @@ files = [
 ]
 
 [[package]]
+name = "websocket-client"
+version = "1.7.0"
+description = "WebSocket client for Python with low level API options"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "websocket-client-1.7.0.tar.gz", hash = "sha256:10e511ea3a8c744631d3bd77e61eb17ed09304c413ad42cf6ddfa4c7787e8fe6"},
+    {file = "websocket_client-1.7.0-py3-none-any.whl", hash = "sha256:f4c3d22fec12a2461427a29957ff07d35098ee2d976d3ba244e688b8b4057588"},
+]
+
+[package.extras]
+docs = ["Sphinx (>=6.0)", "sphinx-rtd-theme (>=1.1.0)"]
+optional = ["python-socks", "wsaccel"]
+test = ["websockets"]
+
+[[package]]
 name = "werkzeug"
 version = "3.0.1"
 description = "The comprehensive WSGI web application library."
@@ -941,4 +1289,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "ba69b71d73351407bfcc8dbe3e557e0be42856b6ea9e74293fb39ad7fa393e9c"
+content-hash = "5982c43fb4bac2a97d42b384d435452c98d186459ad38dd166d51890320734a6"

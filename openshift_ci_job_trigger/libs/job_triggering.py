@@ -1,7 +1,5 @@
 import json
 import xml
-from json import JSONDecodeError
-from pathlib import Path
 
 import requests
 import shortuuid
@@ -9,9 +7,11 @@ import xmltodict
 import yaml
 from timeout_sampler import TimeoutSampler
 
+from openshift_ci_job_trigger.libs.job_db import DB
+
 
 class JobTriggering:
-    def __init__(self, hook_data, flask_logger, triggered_jobs_filepath=None):
+    def __init__(self, hook_data, flask_logger):
         self.logger = flask_logger
 
         self.log_prefix = f"[{shortuuid.random(length=10)}]"
@@ -27,7 +27,6 @@ class JobTriggering:
         )
 
         self.gangway_api_url = "https://gangway-ci.apps.ci.l2s4.p1.openshiftapps.com/v1/executions/"
-        self.triggered_jobs_filepath = triggered_jobs_filepath or self.get_triggered_jobs_filepath()
         self.authorization_header = {"Authorization": f"Bearer {self.token}"}
 
     def verify_hook_data(self):
@@ -46,18 +45,11 @@ class JobTriggering:
         if not all((self.token, self.job_name, self.build_id, self.prow_job_id)):
             raise ValueError(f"{self.log_prefix} Missing parameters")
 
-    @staticmethod
-    def get_triggered_jobs_filepath():
-        filepath = Path("/tmp", "openshift_ci_triggered_jobs.json")
-        if not filepath.exists():
-            filepath.touch()
-
-        return filepath
-
-    def execute(self):
-        if self.prow_job_id in self.read_job_triggering_file().get(self.job_name, []):
-            self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
-            return False
+    def execute_trigger(self):
+        with DB() as database:
+            if database.check_prow_job_id_in_db(job_name=self.job_name, prow_job_id=self.prow_job_id):
+                self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
+                return False
 
         if not self.wait_for_job_completed():
             raise requests.exceptions.RequestException()
@@ -66,7 +58,10 @@ class JobTriggering:
             junit_xml=self.get_tests_from_junit_operator_by_build_id()
         )
         if self.is_build_failed_on_setup(tests_dict=tests_dict):
-            self.trigger_job()
+            prow_job_id = self.trigger_job()
+            with DB() as database:
+                database.write(job_name=self.job_name, prow_job_id=prow_job_id)
+                self.logger.info(f"{self.log_prefix} Save job data to DB")
 
         return True
 
@@ -99,23 +94,6 @@ class JobTriggering:
                 self.logger.info(f"{self.log_prefix} Job ended. Status: {job_status}")
                 return True
 
-    def save_job_data_to_file(self, prow_job_id):
-        data = self.read_job_triggering_file()
-        self.logger.info(f"{self.log_prefix} Save triggering job data to file")
-
-        with open(self.triggered_jobs_filepath, "w") as fd_write:
-            data.setdefault(self.job_name, []).append(prow_job_id)
-            fd_write.write(json.dumps(data))
-
-    def read_job_triggering_file(self):
-        self.logger.info(f"{self.log_prefix} Reading triggering job file")
-        with open(self.triggered_jobs_filepath, "r+") as fd_read:
-            try:
-                data = json.loads(fd_read.read())
-            except JSONDecodeError:
-                data = {}
-        return data
-
     def trigger_job(self):
         self.logger.info(f"{self.log_prefix} Trigger job.")
         response = requests.post(
@@ -131,7 +109,8 @@ class JobTriggering:
 
         prow_job_id = json.loads(response.content.decode())["id"]
         self.logger.info(f"{self.log_prefix} Successfully triggered job.")
-        self.save_job_data_to_file(prow_job_id=prow_job_id)
+
+        return prow_job_id
 
     def get_tests_from_junit_operator_by_build_id(self):
         self.logger.info(f"{self.log_prefix} Get tests from junit_operator.xml")

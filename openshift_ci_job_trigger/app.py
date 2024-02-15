@@ -18,7 +18,7 @@ def healthcheck():
 def process_webhook():
     try:
         job_triggering = JobTriggering(hook_data=request.json, flask_logger=FLASK_APP.logger)
-        job_triggering.execute()
+        job_triggering.execute_trigger()
         return "Process ended successfully."
 
     except Exception as ex:

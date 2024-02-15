@@ -39,6 +39,8 @@ xmltodict = "^0.13.0"
 flask = "^3.0.2"
 shortuuid = "^1.0.11"
 python-simple-logger = "^1.0.10"
+pysqlite3 = "^0.5.2"
+python-utility-scripts = "^0.0.4"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
