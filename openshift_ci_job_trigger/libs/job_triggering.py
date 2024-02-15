@@ -1,6 +1,5 @@
 import json
 import xml
-from json import JSONDecodeError
 from pathlib import Path
 
 import requests
@@ -8,6 +7,34 @@ import shortuuid
 import xmltodict
 import yaml
 from timeout_sampler import TimeoutSampler
+import sqlite3
+
+
+class DB:
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
+        self.db_path = Path("/tmp", "openshift_ci_job_trigger.db")
+        self.db_name = "openshift_ci_job_trigger"
+        self.db = sqlite3.connect(self.db_path)
+
+    def __enter__(self):
+        self.connection = sqlite3.connect(self.db_path)
+        self.cursor = self.connection.cursor()
+        self.cursor.execute("CREATE TABLE openshift_ci_job_trigger (job_name TEXT, prow_job_id TEXT)")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()
+
+    def read(self, job_name):
+        self.cursor.execute(f"SELECT prow_job_id FROM {self.db_name} WHERE job_name = '{job_name}'")
+        return self.cursor.fetchall()
+
+    def write(self, job_name, prow_job_id):
+        self.cursor.execute(
+            f"INSERT INTO {self.db_name} (job_name, prow_job_id) VALUES ('{job_name}', '{prow_job_id}')"
+        )
+        self.connection.commit()
 
 
 class JobTriggering:
@@ -55,9 +82,10 @@ class JobTriggering:
         return filepath
 
     def execute(self):
-        if self.prow_job_id in self.read_job_triggering_file().get(self.job_name, []):
-            self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
-            return False
+        with DB().read(job_name=self.job_name) as read_job_triggering_file:
+            if self.prow_job_id in read_job_triggering_file:
+                self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
+                return False
 
         if not self.wait_for_job_completed():
             raise requests.exceptions.RequestException()
@@ -99,22 +127,9 @@ class JobTriggering:
                 self.logger.info(f"{self.log_prefix} Job ended. Status: {job_status}")
                 return True
 
-    def save_job_data_to_file(self, prow_job_id):
-        data = self.read_job_triggering_file()
-        self.logger.info(f"{self.log_prefix} Save triggering job data to file")
-
-        with open(self.triggered_jobs_filepath, "w") as fd_write:
-            data.setdefault(self.job_name, []).append(prow_job_id)
-            fd_write.write(json.dumps(data))
-
-    def read_job_triggering_file(self):
-        self.logger.info(f"{self.log_prefix} Reading triggering job file")
-        with open(self.triggered_jobs_filepath, "r+") as fd_read:
-            try:
-                data = json.loads(fd_read.read())
-            except JSONDecodeError:
-                data = {}
-        return data
+    def save_job_data_to_db(self, prow_job_id):
+        with DB().write(job_name=self.job_name, prow_job_id=prow_job_id):
+            self.logger.info(f"{self.log_prefix} Save job data to DB")
 
     def trigger_job(self):
         self.logger.info(f"{self.log_prefix} Trigger job.")
@@ -131,7 +146,7 @@ class JobTriggering:
 
         prow_job_id = json.loads(response.content.decode())["id"]
         self.logger.info(f"{self.log_prefix} Successfully triggered job.")
-        self.save_job_data_to_file(prow_job_id=prow_job_id)
+        self.save_job_data_to_db(prow_job_id=prow_job_id)
 
     def get_tests_from_junit_operator_by_build_id(self):
         self.logger.info(f"{self.log_prefix} Get tests from junit_operator.xml")

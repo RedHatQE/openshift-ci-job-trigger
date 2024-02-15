@@ -3,6 +3,9 @@ EXPOSE 5000
 
 ENV APP_DIR=/openshift-ci-job-trigger
 
+RUN apt-get update \
+    && apt-get install -y libsqlite3-dev
+
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 RUN python -m pip install --no-cache-dir pip --upgrade \
