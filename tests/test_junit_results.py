@@ -1,19 +1,14 @@
 import pytest
-import xmltodict
 
 from openshift_ci_job_trigger.libs.job_triggering import JobTriggering
 from tests.constants import REQUEST_JSON
 from tests.test_job_triggering import LOGGER
+from tests.xml_utils import get_junit_file
 
 
 @pytest.fixture(scope="class")
 def job_trigger():
     return JobTriggering(hook_data=REQUEST_JSON, flask_logger=LOGGER)
-
-
-def get_junit_file(filepath):
-    with open(filepath) as fd:
-        return xmltodict.parse(fd.read())
 
 
 class TestFailedJobXML:
