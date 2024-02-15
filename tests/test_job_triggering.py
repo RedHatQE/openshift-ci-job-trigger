@@ -20,7 +20,7 @@ def hook_data_dict():
     return copy.deepcopy({"job_name": "periodic-test-job", "build_id": "1", "prow_job_id": "123456", "token": "token"})
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture()
 def job_triggering(hook_data_dict):
     return JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
 
@@ -31,6 +31,20 @@ def test_verify_job_trigger_mandatory_params(hook_data_dict, param):
 
     with pytest.raises(ValueError):
         JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
+
+
+@pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
+def test_failed_job_in_pre_phase(junit_file, job_triggering):
+    tests_dict = job_triggering.get_testsuites_testcase_from_junit_operator(junit_xml=junit_file)
+    assert job_triggering.is_build_failed_on_setup(tests_dict=tests_dict), "Job should fail on pre phase but did not"
+
+
+@pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_test_phase.xml"], indirect=True)
+def test_failed_job_in_tests_phase(junit_file, job_triggering):
+    tests_dict = job_triggering.get_testsuites_testcase_from_junit_operator(junit_xml=junit_file)
+    assert not job_triggering.is_build_failed_on_setup(
+        tests_dict=tests_dict
+    ), "Job should fail on test phase but did not"
 
 
 class TestJobTriggering:
@@ -58,19 +72,3 @@ class TestJobTriggering:
         hook_data_dict["prow_job_id"] = TestJobTriggering.PROW_JOB_ID
         job_triggering = JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
         assert not job_triggering.execute_trigger(), "Job should not be triggered"
-
-
-class TestFailedJobXML:
-    @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
-    def test_failed_job_in_pre_phase(self, junit_file, job_triggering):
-        tests_dict = job_triggering.get_testsuites_testcase_from_junit_operator(junit_xml=junit_file())
-        assert job_triggering.is_build_failed_on_setup(
-            tests_dict=tests_dict
-        ), "Job should fail on pre phase but did not"
-
-    @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_test_phase.xml"], indirect=True)
-    def test_failed_job_in_tests_phase(self, junit_file, job_triggering):
-        tests_dict = job_triggering.get_testsuites_testcase_from_junit_operator(junit_xml=junit_file())
-        assert not job_triggering.is_build_failed_on_setup(
-            tests_dict=tests_dict
-        ), "Job should fail on test phase but did not"
