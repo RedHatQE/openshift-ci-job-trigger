@@ -39,6 +39,7 @@ xmltodict = "^0.13.0"
 flask = "^3.0.2"
 shortuuid = "^1.0.11"
 python-simple-logger = "^1.0.10"
+pysqlite3 = "^0.5.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
@@ -46,6 +47,9 @@ ipython = "*"
 
 [tool.poetry.group.tests.dependencies]
 pytest = "^8.0.0"
+pytest-mock = "^3.12.0"
+python-utility-scripts = "^0.0.4"
+pytest-cov = "^4.1.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
