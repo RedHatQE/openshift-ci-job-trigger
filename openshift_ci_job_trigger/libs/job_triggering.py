@@ -54,21 +54,23 @@ Job: {self.job_name} | Build ID: {self.build_id} | Prow ID: {self.prow_job_id}
         with DB(job_db_path=job_db_path) as database:
             if database.check_prow_job_id_in_db(job_name=self.job_name, prow_job_id=self.prow_job_id):
                 self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
+                if self.slack_webhook_url:
+                    send_slack_message(
+                        message=f"{slack_msg}already auto-triggered, will not re-trigger",
+                        webhook_url=self.slack_webhook_url,
+                        log_prefix=self.log_prefix,
+                        app_logger=self.logger,
+                    )
+                return False
+
+        if not self.wait_for_job_completed():
+            if self.slack_webhook_url:
                 send_slack_message(
-                    message=f"{slack_msg}\nalready auto-triggered..",
+                    message=f"{slack_msg}Timeout waiting for job to complete, not re-triggering",
                     webhook_url=self.slack_webhook_url,
                     log_prefix=self.log_prefix,
                     app_logger=self.logger,
                 )
-                return False
-
-        if not self.wait_for_job_completed():
-            send_slack_message(
-                message=f"{slack_msg}\nnever completed",
-                webhook_url=self.slack_webhook_url,
-                log_prefix=self.log_prefix,
-                app_logger=self.logger,
-            )
 
             raise requests.exceptions.RequestException()
 
@@ -77,12 +79,13 @@ Job: {self.job_name} | Build ID: {self.build_id} | Prow ID: {self.prow_job_id}
         )
         if self.is_build_failed_on_setup(tests_dict=tests_dict):
             prow_job_id = self.trigger_job()
-            send_slack_message(
-                message=f"{slack_msg}\ntriggered",
-                webhook_url=self.slack_webhook_url,
-                log_prefix=self.log_prefix,
-                app_logger=self.logger,
-            )
+            if self.slack_webhook_url:
+                send_slack_message(
+                    message=f"{slack_msg}Job failed during `pre phase`, re-triggering job",
+                    webhook_url=self.slack_webhook_url,
+                    log_prefix=self.log_prefix,
+                    app_logger=self.logger,
+                )
 
             with DB(job_db_path=job_db_path) as database:
                 database.write(job_name=self.job_name, prow_job_id=prow_job_id)
