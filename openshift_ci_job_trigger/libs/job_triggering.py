@@ -49,7 +49,9 @@ class JobTriggering:
 
     def execute_trigger(self, job_db_path=None):
         slack_msg = f"""
-Job: {self.job_name} | Build ID: {self.build_id} | Prow ID: {self.prow_job_id}
+Job: {self.job_name}
+Build ID: {self.build_id}
+Prow ID: {self.prow_job_id}
 """
         with DB(job_db_path=job_db_path) as database:
             if database.check_prow_job_id_in_db(job_name=self.job_name, prow_job_id=self.prow_job_id):
