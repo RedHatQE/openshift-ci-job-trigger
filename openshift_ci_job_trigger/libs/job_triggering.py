@@ -8,6 +8,7 @@ import yaml
 from timeout_sampler import TimeoutSampler
 
 from openshift_ci_job_trigger.libs.job_db import DB
+from openshift_ci_job_trigger.utils.general import send_slack_message
 
 
 class JobTriggering:
@@ -20,6 +21,7 @@ class JobTriggering:
         self.build_id = self.hook_data.get("build_id")
         self.job_name = self.hook_data.get("job_name")
         self.prow_job_id = self.hook_data.get("prow_job_id")
+        self.slack_webhook_url = self.hook_data.get("slack_webhook_url")
         self.verify_hook_data()
 
         self.logger.info(
@@ -46,12 +48,28 @@ class JobTriggering:
             raise ValueError(f"{self.log_prefix} Missing parameters")
 
     def execute_trigger(self, job_db_path=None):
+        slack_msg = f"""
+Job: {self.job_name} | Build ID: {self.build_id} | Prow ID: {self.prow_job_id}
+"""
         with DB(job_db_path=job_db_path) as database:
             if database.check_prow_job_id_in_db(job_name=self.job_name, prow_job_id=self.prow_job_id):
                 self.logger.warning(f"{self.log_prefix} Job was already auto-triggered. Exiting.")
+                send_slack_message(
+                    message=f"{slack_msg}\nalready auto-triggered..",
+                    webhook_url=self.slack_webhook_url,
+                    log_prefix=self.log_prefix,
+                    app_logger=self.logger,
+                )
                 return False
 
         if not self.wait_for_job_completed():
+            send_slack_message(
+                message=f"{slack_msg}\nnever completed",
+                webhook_url=self.slack_webhook_url,
+                log_prefix=self.log_prefix,
+                app_logger=self.logger,
+            )
+
             raise requests.exceptions.RequestException()
 
         tests_dict = self.get_testsuites_testcase_from_junit_operator(
@@ -59,6 +77,13 @@ class JobTriggering:
         )
         if self.is_build_failed_on_setup(tests_dict=tests_dict):
             prow_job_id = self.trigger_job()
+            send_slack_message(
+                message=f"{slack_msg}\ntriggered",
+                webhook_url=self.slack_webhook_url,
+                log_prefix=self.log_prefix,
+                app_logger=self.logger,
+            )
+
             with DB(job_db_path=job_db_path) as database:
                 database.write(job_name=self.job_name, prow_job_id=prow_job_id)
                 self.logger.info(f"{self.log_prefix} Save job data to DB")
