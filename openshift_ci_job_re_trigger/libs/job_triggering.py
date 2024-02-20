@@ -7,8 +7,8 @@ import xmltodict
 import yaml
 from timeout_sampler import TimeoutSampler
 
-from openshift_ci_job_trigger.libs.job_db import DB
-from openshift_ci_job_trigger.utils.general import send_slack_message
+from openshift_ci_job_re_trigger.libs.job_db import DB
+from openshift_ci_job_re_trigger.utils.general import send_slack_message
 
 
 class JobTriggering:

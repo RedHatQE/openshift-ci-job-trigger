@@ -7,7 +7,7 @@ from timeout_sampler import TimeoutSampler
 
 class DB:
     def __init__(self, job_db_path=None):
-        self.db_path = job_db_path or Path("/tmp", "openshift_ci_job_trigger.db")
+        self.db_path = job_db_path or Path("/tmp", "openshift_ci_job_re_trigger.db")
         self.connection = None
         self.cursor = None
 

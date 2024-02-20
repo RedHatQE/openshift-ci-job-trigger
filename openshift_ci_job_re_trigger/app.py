@@ -1,12 +1,12 @@
 from flask import request
 
-from openshift_ci_job_trigger.libs.job_triggering import JobTriggering
+from openshift_ci_job_re_trigger.libs.job_triggering import JobTriggering
 import os
 
 
-from openshift_ci_job_trigger.utils.logger_utils import FLASK_APP
+from openshift_ci_job_re_trigger.utils.logger_utils import FLASK_APP
 
-APP_ROOT_PATH = "/openshift_ci_job_trigger"
+APP_ROOT_PATH = "/openshift_ci_job_re_trigger"
 
 
 @FLASK_APP.route(f"{APP_ROOT_PATH}/healthcheck")
@@ -29,9 +29,9 @@ def process_webhook():
 def main():
     FLASK_APP.logger.info(f"Starting {FLASK_APP.name} app")
     FLASK_APP.run(
-        port=int(os.environ.get("OPENSHIFT_CI_JOB_TRIGGER_PORT", 5000)),
+        port=int(os.environ.get("OPENSHIFT_CI_JOB_RE_TRIGGER_PORT", 5000)),
         host="0.0.0.0",
-        use_reloader=True if os.environ.get("OPENSHIFT_CI_JOB_TRIGGER_USE_RELOAD") else False,
+        use_reloader=True if os.environ.get("OPENSHIFT_CI_JOB_RE_TRIGGER_USE_RELOAD") else False,
     )
 
 

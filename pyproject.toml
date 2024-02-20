@@ -8,23 +8,23 @@ output-format = "grouped"
 exclude = [".git", ".venv", ".mypy_cache", ".tox", "__pycache__"]
 
 [tool.poetry]
-name = "openshift-ci-job-trigger"
+name = "openshift-ci-job-re-trigger"
 version = "0.0.0"
 description = "A tool to trigger openshift-ci jobs"
 readme = "README.md"
-repository = "https://github.com/RedHatQE/openshift-ci-job-trigger"
-authors = ["Meni Yakove <myakove@gmail.com>", "Ruth Netser <rnetser@gmail.com>"]
+repository = "https://github.com/RedHatQE/openshift-ci-job-re-trigger"
+authors = ["Meni Yakove <myakove@gmail.com>", "Ruth Netser <ruty.n4@gmail.com>"]
 license = "Apache-2.0"
-packages = [{ include = "openshift_ci_job_trigger" }]
-homepage = "https://github.com/RedHatQE/openshift-ci-job-trigger"
-documentation = "https://github.com/RedHatQE/openshift-ci-job-trigger/blob/main/README.md"
+packages = [{ include = "openshift_ci_job_re_trigger" }]
+homepage = "https://github.com/RedHatQE/openshift-ci-job-re-trigger"
+documentation = "https://github.com/RedHatQE/openshift-ci-job-re-trigger/blob/main/README.md"
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
 ]
 
 [tool.poetry.scripts]
-openshift-cli-installer = "openshift_ci_job_trigger.cli:main"
+openshift-cli-installer = "openshift_ci_job_re_trigger.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"

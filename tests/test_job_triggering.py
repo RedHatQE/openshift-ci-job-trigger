@@ -4,7 +4,7 @@ import pathlib
 import pytest
 from simple_logger.logger import get_logger
 
-from openshift_ci_job_trigger.libs.job_triggering import JobTriggering
+from openshift_ci_job_re_trigger.libs.job_triggering import JobTriggering
 import xmltodict
 
 LOGGER = get_logger(name=__name__)
@@ -54,7 +54,7 @@ class TestJobTriggering:
 
     @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
     def test_add_job_trigger(self, tmpdir, mocker, junit_file, job_triggering):
-        job_trigger_module_path = "openshift_ci_job_trigger.libs.job_triggering.JobTriggering"
+        job_trigger_module_path = "openshift_ci_job_re_trigger.libs.job_triggering.JobTriggering"
         mocker.patch(
             f"{job_trigger_module_path}.trigger_job",
             return_value=TestJobTriggering.PROW_JOB_ID,

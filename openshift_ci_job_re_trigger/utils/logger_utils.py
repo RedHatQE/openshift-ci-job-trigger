@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 
 from colorlog import ColoredFormatter
 
-FLASK_APP = Flask("openshift-ci-job-trigger")
+FLASK_APP = Flask("openshift-ci-job-re-trigger")
 
 
 class WrapperLogFormatter(ColoredFormatter):

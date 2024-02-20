@@ -1,4 +1,4 @@
-# openshift-ci-job-trigger
+# openshift-ci-job-re-trigger
 
 A Flask-based webhook server for re-triggering [openshift-ci](https://github.com/openshift/release) jobs.  
 Only periodic jobs can be re-triggered (openShift-ci API limitation).  
@@ -10,7 +10,7 @@ The job will be re-triggered only once.
 
 
 ```bash
-curl -X POST  http://<url>:5000/openshift_ci_job_trigger -d '{"job_name":"'"$JOB_NAME"'", "build_id": "'"$BUILD_ID"'", "prow_job_id":"'"$PROW_JOB_ID"'", "token":  "'"$OPENSHIFT_CI_TOKEN"'"}' -H "Content-Type: application/json"
+curl -X POST  http://<url>:5000/openshift_ci_job_re_trigger -d '{"job_name":"'"$JOB_NAME"'", "build_id": "'"$BUILD_ID"'", "prow_job_id":"'"$PROW_JOB_ID"'", "token":  "'"$OPENSHIFT_CI_TOKEN"'"}' -H "Content-Type: application/json"
 
 ```
 
@@ -21,20 +21,20 @@ curl -X POST  http://<url>:5000/openshift_ci_job_trigger -d '{"job_name":"'"$JOB
 
 
 Pre-build container images available in:
-- quay.io/redhat_msi/openshift-ci-job-trigger
+- quay.io/redhat_msi/openshift-ci-job-re-trigger
 
 ## Build container
 
 Using podman:
 
 ```bash
-podman build -t openshift-ci-job-trigger .
+podman build -t openshift-ci-job-re-trigger .
 ```
 
 Using docker:
 
 ```bash
-docker build -t openshift-ci-job-trigger .
+docker build -t openshift-ci-job-re-trigger .
 ```
 
 
@@ -48,8 +48,8 @@ To run locally you need to export some os environment variables
 poetry install
 
 export FLASK_DEBUG=1  # Optional; to output flask logs to console.
-export OPENSHIFT_CI_JOB_TRIGGER_PORT=5003  # Optional; to set a different port than 5000.
-export OPENSHIFT_CI_JOB_TRIGGER_USE_RELOAD=1  # Optional; to re-load configuration when code is saved.
+export OPENSHIFT_CI_JOB_RE_TRIGGER_PORT=5003  # Optional; to set a different port than 5000.
+export OPENSHIFT_CI_JOB_RE_TRIGGER_USE_RELOAD=1  # Optional; to re-load configuration when code is saved.
 
-poetry run python openshift_ci_job_trigger/app.py
+poetry run python openshift_ci_job_re_trigger/app.py
 ```
