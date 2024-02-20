@@ -1,5 +1,4 @@
 import copy
-import pathlib
 
 import pytest
 from simple_logger.logger import get_logger
@@ -24,6 +23,11 @@ def hook_data_dict():
 @pytest.fixture()
 def job_triggering(hook_data_dict):
     return JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
+
+
+@pytest.fixture(scope="class")
+def db_filepath(tmp_path_factory):
+    return tmp_path_factory.getbasetemp() / "job_re_triggering_test.db"
 
 
 @pytest.mark.parametrize("param", ["job_name", "build_id", "prow_job_id", "token"])
@@ -53,7 +57,7 @@ class TestJobTriggering:
     PROW_JOB_ID = "123456"
 
     @pytest.mark.parametrize("junit_file", ["tests/manifests/junit_operator_failed_pre_phase.xml"], indirect=True)
-    def test_add_job_trigger(self, tmpdir, mocker, junit_file, job_triggering):
+    def test_add_job_trigger(self, mocker, db_filepath, junit_file, job_triggering):
         job_trigger_module_path = "openshift_ci_job_re_trigger.libs.job_triggering.JobTriggering"
         mocker.patch(
             f"{job_trigger_module_path}.trigger_job",
@@ -68,11 +72,9 @@ class TestJobTriggering:
             return_value=junit_file,
         )
 
-        assert job_triggering.execute_trigger(
-            job_db_path=pathlib.Path(tmpdir, "job_triggering_test.db")
-        ), "Job should be triggered"
+        assert job_triggering.execute_trigger(job_db_path=db_filepath), "Job should be triggered"
 
-    def test_already_triggered(self, hook_data_dict):
+    def test_already_triggered(self, db_filepath, hook_data_dict):
         hook_data_dict["prow_job_id"] = TestJobTriggering.PROW_JOB_ID
         job_triggering = JobTriggering(hook_data=hook_data_dict, flask_logger=LOGGER)
-        assert not job_triggering.execute_trigger(), "Job should not be triggered"
+        assert not job_triggering.execute_trigger(db_filepath), "Job should not be triggered"
