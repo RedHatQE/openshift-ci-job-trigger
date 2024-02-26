@@ -1254,12 +1254,12 @@ files = [
 
 [[package]]
 name = "timeout-sampler"
-version = "0.0.10"
+version = "0.0.11"
 description = "Timeout utility class to wait for any function output and interact with it in given time"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "timeout_sampler-0.0.10.tar.gz", hash = "sha256:5ec5725721ac98ef44c508ed7343e7b255dc24c819a560ee61042e263c27caa4"},
+    {file = "timeout_sampler-0.0.11.tar.gz", hash = "sha256:129dda9a6eb3f456bf828de22eb9fc931a917b7ca33167829226403fd49ae592"},
 ]
 
 [package.dependencies]
@@ -1392,4 +1392,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "bdf00bdb7a3eb2272ea522aa29e8646722423c60a37538accc78b479cf651f87"
+content-hash = "c46e5c1e1702e3b75be2e276c6962a3332465ddc71d0ba9cc429d6ccbb9cdb0e"
