@@ -1,3 +1,5 @@
+Code is under [ci-jobs-trigger](https://github.com/RedHatQE/ci-jobs-trigger) repo
+
 # openshift-ci-job-trigger
 
 A Flask-based webhook server for re-triggering [openshift-ci](https://github.com/openshift/release) jobs.  
